@@ -13,12 +13,16 @@ async function main() {
    * 　id,name,usernameのフィールドオブジェクトを生成）   
    *  
    * 　指定したIdのTweetを取得する
-   * 　probrem
+   * 　probrem➀
    *  →tweetsObjにはUserIdのキーを持っていなかった
-   *  →
+   *  →定義が足りてなかった
+   *  →UserIdのtweetを取得というよりはUserIdでフィルタリング
+   * 
+   *   probrem➁
+   *  →フィルタリング機能
   */
-  // const { data } = await client.users.findUserByUsername("Cl_you");
-  
+  const { data } = await client.users.findUserByUsername("Cl_you");
+  console.log(data?.id)
   // if (!data) throw new Error("Couldn't find user");
   // let count = 0;
   // for await (const followers of client.users.usersIdFollowers(data.id)) {
@@ -28,7 +32,36 @@ async function main() {
   //   }
   // }
 
-  const stream = client.tweets.sampleStream({
+  const stream = client.tweets.searchStream({
+    "tweet.fields": ["author_id", "geo","lang","public_metrics"],
+  });
+  for await (const tweet of stream) {
+
+    // ガード節　tweetIdがundefind
+    if(tweet.data?.public_metrics?.like_count == undefined){
+      continue;
+    }
+
+    // Likeが10カウント以上の場合
+    if(tweet.data?.public_metrics?.like_count >= 10){
+      console.log(tweet.data)
+    }
+  }
+}
+
+async function filterTweetsbyId() {
+  const client = new Client(process.env.BEARER_TOKEN as string);
+  await client.tweets.addOrDeleteRules(
+    {
+      add: [
+        {value: "LeagueOfLegend", tag: "LeagueOfLegends"}
+      ]
+    }
+  );
+  
+  const rules = await client.tweets.getRules();
+  console.log(rules);
+  const stream = client.tweets.searchStream({
     "tweet.fields": ["author_id", "geo"],
   });
   for await (const tweet of stream) {
@@ -36,5 +69,6 @@ async function main() {
   }
 }
 
-main();
+filterTweetsbyId()
+// main();
 

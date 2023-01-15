@@ -24,7 +24,7 @@ async function main() {
     "tweet.fields": ["author_id", "geo"],
   });
   for await (const tweet of stream) {
-    console.log(tweet.data?.author_id);
+    console.log(tweet.data);
   }
 }
 
