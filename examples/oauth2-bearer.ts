@@ -8,15 +8,33 @@ dotenv.config();
 
 async function main() {
   const client = new Client(process.env.BEARER_TOKEN as string);
-  const { data } = await client.users.findUserByUsername("TwitterDev");
-  if (!data) throw new Error("Couldn't find user");
-  let count = 0;
-  for await (const followers of client.users.usersIdFollowers(data.id)) {
-    console.log(followers);
-    if (++count == 3) {
-      break;
-    }
+  /** UserNameからclient情報を取得する
+   * （Ex. Cl_youのclientオブジェクトを取得
+   * 　id,name,usernameのフィールドオブジェクトを生成）   
+   *  
+   * 　指定したIdのTweetを取得する
+   * 　probrem
+   *  →tweetsObjにはUserIdのキーを持っていなかった
+   *  →
+  */
+  // const { data } = await client.users.findUserByUsername("Cl_you");
+  
+  // if (!data) throw new Error("Couldn't find user");
+  // let count = 0;
+  // for await (const followers of client.users.usersIdFollowers(data.id)) {
+  //   console.log(followers);
+  //   if (++count == 3) {
+  //     break;
+  //   }
+  // }
+
+  const stream = client.tweets.sampleStream({
+    "tweet.fields": ["author_id", "geo"],
+  });
+  for await (const tweet of stream) {
+    console.log(tweet.data);
   }
 }
 
 main();
+
