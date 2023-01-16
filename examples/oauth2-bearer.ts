@@ -22,31 +22,29 @@ async function main() {
    *  →フィルタリング機能
   */
   const { data } = await client.users.findUserByUsername("Cl_you");
-  console.log(data?.id)
-  // if (!data) throw new Error("Couldn't find user");
-  // let count = 0;
-  // for await (const followers of client.users.usersIdFollowers(data.id)) {
-  //   console.log(followers);
-  //   if (++count == 3) {
-  //     break;
-  //   }
-  // }
-
-  const stream = client.tweets.searchStream({
-    "tweet.fields": ["author_id", "geo","lang","public_metrics"],
-  });
-  for await (const tweet of stream) {
-
-    // ガード節　tweetIdがundefind
-    if(tweet.data?.public_metrics?.like_count == undefined){
-      continue;
-    }
-
-    // Likeが10カウント以上の場合
-    if(tweet.data?.public_metrics?.like_count >= 10){
-      console.log(tweet.data)
+  if (!data) throw new Error("Couldn't find user");
+  let count = 0;
+  
+  for await (const followers of client.users.usersIdFollowers(data.id)) {
+    if (++count == 3) {
+      break;
     }
   }
+
+  // 取得したツイートが処理できる
+  // const stream = client.tweets.searchStream({
+  //   "tweet.fields": ["author_id", "geo","lang","public_metrics"],
+  // });
+  // for await (const tweet of stream) {
+
+  //   if(tweet.data?.public_metrics?.like_count == undefined){
+  //     continue;
+  //   }
+
+  //   if(tweet.data?.public_metrics?.like_count >= 10){
+  //     console.log(tweet.data)
+  //   }
+  // }
 }
 
 async function filterTweetsbyId() {
@@ -69,6 +67,39 @@ async function filterTweetsbyId() {
   }
 }
 
-filterTweetsbyId()
+async function filterTweetsByFollower(){
+  const client = new Client(process.env.BEARER_TOKEN as string);
+  const stream = client.tweets.searchStream({
+    "tweet.fields": ["author_id", "geo","lang","public_metrics"],
+  });
+
+  for await (const tweet of stream) {
+
+    // ガード節　tweetIdがundefind
+    if(tweet.data?.public_metrics?.like_count == undefined){
+      continue;
+    }
+
+    // Likeが10カウント以上の場合
+    if(tweet.data?.public_metrics?.like_count >= 10){
+      console.log(tweet.data)
+    }
+  }
+}
+
+// 自分がいいねしたtweetを取得
+async function getLikeTweetbyUserName(){
+  const client = new Client(process.env.BEARER_TOKEN as string);
+  const { data } = await client.users.findUserByUsername("Cl_you");
+  if (!data) throw new Error("Couldn't find user");
+  
+  const tweets = client.tweets.usersIdLikedTweets(data.id)
+  for await (const tweet of tweets) {
+    console.log(tweet);
+  }
+}
+
+// filterTweetsbyId()
 // main();
+getLikeTweetbyUserName();
 
